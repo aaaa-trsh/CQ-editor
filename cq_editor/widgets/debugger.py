@@ -6,6 +6,7 @@ from typing import List
 from bdb import BdbQuit
 
 import cadquery as cq
+import uuid
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QObject, pyqtSlot, pyqtSignal, QEventLoop, QAbstractTableModel
 from PyQt5.QtWidgets import QAction, QTableView
@@ -13,10 +14,11 @@ from PyQt5.QtWidgets import QAction, QTableView
 from logbook import info
 from path import Path
 from pyqtgraph.parametertree import Parameter
-from spyder.utils.icon_manager import icon
 
 from ..cq_utils import find_cq_objects, reload_cq
 from ..mixins import ComponentMixin
+
+from ..icons import icon
 
 DUMMY_FILE = '<cq_editor-string>'
 
@@ -141,17 +143,17 @@ class Debugger(QObject,ComponentMixin):
                              checkable=True,
                              shortcut='ctrl+F5',
                              triggered=self.debug),
-                      QAction(icon('arrow-step-over'),
+                      QAction(icon('step_over'),
                              'Step',
                              self,
                              shortcut='ctrl+F10',
                              triggered=lambda: self.debug_cmd(DbgState.STEP)),
-                      QAction(icon('arrow-step-in'),
+                      QAction(icon('step_into'),
                              'Step in',
                              self,
                              shortcut='ctrl+F11',
                              triggered=lambda: self.debug_cmd(DbgState.STEP_IN)),
-                      QAction(icon('arrow-continue'),
+                      QAction(icon('continue'),
                               'Continue',
                               self,
                               shortcut='ctrl+F12',
@@ -217,8 +219,27 @@ class Debugger(QObject,ComponentMixin):
 
             _show_object(obj,name,options=dict(color='red',alpha=0.2))
 
+        def _debugRay(origin=cq.Vector(0, 0, 0), direction=cq.Vector(0, 0, 1), name=None, color='red'):
+            workplane = cq.Workplane(cq.Plane(origin, direction, cq.Vector(0, 0, 1)), origin)
+            ray = workplane.moveTo(0, 0).lineTo(0, 1)
+
+            _show_object(ray, name or f"debug ray {uuid.uuid4().hex}", {'color': color})
+
+        def _debugLine(a=cq.Vector(0, 0, 0), b=cq.Vector(0, 0, 1), name=None, color='red'):
+            origin = a
+            direction = b - a
+            
+            _debugRay(origin, direction, name or f"debug line {uuid.uuid4().hex}", color)
+
+        def _debugFace(face, name=None, options=dict(color='red',alpha=0.2)):
+            name = name or f"debug face {uuid.uuid4().hex}"
+            _show_object(face.val(), name, options)
+
         module.__dict__['show_object'] = _show_object
         module.__dict__['debug'] = _debug
+        module.__dict__['debugRay'] = _debugRay
+        module.__dict__['debugLine'] = _debugLine
+        module.__dict__['debugFace'] = _debugFace
         module.__dict__['log'] = lambda x: info(str(x))
         module.__dict__['cq'] = cq
 
