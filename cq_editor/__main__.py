@@ -8,6 +8,8 @@ NAME = 'CQ-editor'
 #need to initialize QApp here, otherewise svg icons do not work on windows
 app = QApplication(sys.argv,
                    applicationName=NAME)
+import qdarktheme
+qdarktheme.setup_theme()
 
 from .main_window import MainWindow
 

@@ -77,7 +77,7 @@ class CQRootItem(TopTreeItem):
 
     def __init__(self,*args,**kwargs):
 
-        super(CQRootItem,self).__init__(['CQ models'],*args,**kwargs)
+        super(CQRootItem,self).__init__(['Models'],*args,**kwargs)
 
 
 class HelpersRootItem(TopTreeItem):

@@ -20,8 +20,6 @@ from ..cq_utils import to_occ_color, make_AIS, DEFAULT_FACE_COLOR
 from .occt_widget import OCCTWidget
 
 from pyqtgraph.parametertree import Parameter
-import qtawesome as qta
-
 
 
 DEFAULT_EDGE_COLOR = Quantity_Color(BLACK)
@@ -110,56 +108,57 @@ class OCCViewer(QWidget,ComponentMixin):
     def create_actions(self,parent):
 
         self._actions =  \
-                {'View' : [QAction(qta.icon('fa.arrows-alt'),
-                                   'Fit (Shift+F1)',
-                                   parent,
-                                   shortcut='shift+F1',
-                                   triggered=self.fit),
-                          QAction(QIcon(':/images/icons/isometric_view.svg'),
+                {'View' : [
+                          QAction(QIcon('./icons/isometric_view.svg'),
                                   'Iso (Shift+F2)',
                                   parent,
                                   shortcut='shift+F2',
                                   triggered=self.iso_view),
-                          QAction(QIcon(':/images/icons/top_view.svg'),
+                          QAction(QIcon('./icons/top_view.svg'),
                                   'Top (Shift+F3)',
                                   parent,
                                   shortcut='shift+F3',
                                   triggered=self.top_view),
-                          QAction(QIcon(':/images/icons/bottom_view.svg'),
+                          QAction(QIcon('./icons/bottom_view.svg'),
                                   'Bottom (Shift+F4)',
                                   parent,
                                   shortcut='shift+F4',
                                   triggered=self.bottom_view),
-                          QAction(QIcon(':/images/icons/front_view.svg'),
+                          QAction(QIcon('./icons/front_view.svg'),
                                   'Front (Shift+F5)',
                                   parent,
                                   shortcut='shift+F5',
                                   triggered=self.front_view),
-                          QAction(QIcon(':/images/icons/back_view.svg'),
+                          QAction(QIcon('./icons/back_view.svg'),
                                   'Back (Shift+F6)',
                                   parent,
                                   shortcut='shift+F6',
                                   triggered=self.back_view),
-                          QAction(QIcon(':/images/icons/left_side_view.svg'),
+                          QAction(QIcon('./icons/left_side_view.svg'),
                                   'Left (Shift+F7)',
                                   parent,
                                   shortcut='shift+F7',
                                   triggered=self.left_view),
-                          QAction(QIcon(':/images/icons/right_side_view.svg'),
+                          QAction(QIcon('./icons/right_side_view.svg'),
                                   'Right (Shift+F8)',
                                   parent,
                                   shortcut='shift+F8',
                                   triggered=self.right_view),
-                          QAction(qta.icon('fa.square-o'),
-                                  'Wireframe (Shift+F9)',
+                          QAction(
+                                  'Wireframe',
                                   parent,
                                   shortcut='shift+F9',
                                   triggered=self.wireframe_view),
-                                  QAction(qta.icon('fa.square'),
-                                          'Shaded (Shift+F10)',
-                                          parent,
-                                          shortcut='shift+F10',
-                                          triggered=self.shaded_view)],
+                        QAction(
+                                'Shaded',
+                                parent,
+                                shortcut='shift+F10',
+                                triggered=self.shaded_view),
+                                QAction(
+                                   'Reset Camera',
+                                   parent,
+                                   shortcut='shift+F1',
+                                   triggered=self.fit),],
                  'Tools' : [QAction(icon('screenshot'),
                                    'Screenshot',
                                    parent,

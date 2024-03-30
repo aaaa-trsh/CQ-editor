@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="/images">
+    <file>icons\back_view.svg</file>
+<file>icons\bottom_view.svg</file>
+<file>icons\cadquery_logo_dark.svg</file>
+<file>icons\front_view.svg</file>
+<file>icons\isometric_view.svg</file>
+<file>icons\left_side_view.svg</file>
+<file>icons\right_side_view.svg</file>
+<file>icons\top_view.svg</file>
+  </qresource>
+</RCC>

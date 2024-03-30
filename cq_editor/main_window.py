@@ -30,7 +30,6 @@ class MainWindow(QMainWindow,MainMixin):
         super(MainWindow,self).__init__(parent)
         MainMixin.__init__(self)
 
-        self.setWindowIcon(icon('app'))
 
         # Windows workaround - makes the correct task bar icon show up.
         if sys.platform == "win32":
@@ -175,12 +174,12 @@ class MainWindow(QMainWindow,MainMixin):
                     self,triggered=self.edit_preferences))
 
         menu_help.addAction( \
-            QAction(icon('help'),
-                    'Documentation',
+            QAction(icon('docs'),
+                    'Docs',
                     self,triggered=self.documentation))
 
         menu_help.addAction( \
-             QAction('CQ documentation',
+             QAction(icon('docs'), 'CQ Docs',
                     self,triggered=self.cq_documentation))
 
         menu_help.addAction( \
