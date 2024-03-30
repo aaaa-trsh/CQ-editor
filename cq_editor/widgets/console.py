@@ -12,7 +12,14 @@ class ConsoleWidget(RichJupyterWidget,ComponentMixin):
 
     def __init__(self, customBanner=None, namespace=dict(), *args, **kwargs):
         super(ConsoleWidget, self).__init__(*args, **kwargs)
-
+        self.set_default_style(colors='linux')
+        self.syntax_style = 'monokai'
+        self.style_sheet = """
+            .QPlainTextEdit {
+                background-color: #202124;
+                color: #dcdccc;
+            }
+        """
 #        if not customBanner is None:
 #            self.banner = customBanner
 
