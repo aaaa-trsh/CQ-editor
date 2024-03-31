@@ -219,26 +219,12 @@ class Debugger(QObject,ComponentMixin):
 
             _show_object(obj,name,options=dict(color='red',alpha=0.2))
 
-        def _debugRay(origin=cq.Vector(0, 0, 0), direction=cq.Vector(0, 0, 1), name=None, color='red'):
-            workplane = cq.Workplane(cq.Plane(origin, direction, cq.Vector(0, 0, 1)), origin)
-            ray = workplane.moveTo(0, 0).lineTo(0, 1)
-
-            _show_object(ray, name or f"debug ray {uuid.uuid4().hex}", {'color': color})
-
-        def _debugLine(a=cq.Vector(0, 0, 0), b=cq.Vector(0, 0, 1), name=None, color='red'):
-            origin = a
-            direction = b - a
-            
-            _debugRay(origin, direction, name or f"debug line {uuid.uuid4().hex}", color)
-
         def _debugFace(face, name=None, options=dict(color='red',alpha=0.2)):
             name = name or f"debug face {uuid.uuid4().hex}"
             _show_object(face.val(), name, options)
 
         module.__dict__['show_object'] = _show_object
         module.__dict__['debug'] = _debug
-        module.__dict__['debugRay'] = _debugRay
-        module.__dict__['debugLine'] = _debugLine
         module.__dict__['debugFace'] = _debugFace
         module.__dict__['log'] = lambda x: info(str(x))
         module.__dict__['cq'] = cq

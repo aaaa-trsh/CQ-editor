@@ -14,10 +14,27 @@ from .viewer import DEFAULT_FACE_COLOR
 from ..utils import splitter, layout, get_save_filename
 
 class TopTreeItem(QTreeWidgetItem):
+    props = [{'name': 'Visible', 'type': 'bool','value': True}]
+    def __init__(self,name,sig,*args,**kwargs):
 
-    def __init__(self,*args,**kwargs):
+        super(TopTreeItem,self).__init__(name, *args,**kwargs)
+        self.setFlags( self.flags() | Qt.ItemIsUserCheckable)
+        self.setCheckState(0,Qt.Checked)
 
-        super(TopTreeItem,self).__init__(*args,**kwargs)
+        self.sig = sig
+
+        self.properties = Parameter.create(name='Properties', children=self.props)
+        self.properties.sigTreeStateChanged.connect(self.propertiesChanged)
+        self.propertiesChanged(self.properties,[[self.properties['Visible']]])
+
+    def propertiesChanged(self, properties, changed):        
+        if self.properties['Visible']:
+            self.setCheckState(0,Qt.Checked)
+        else:
+            self.setCheckState(0,Qt.Unchecked)
+
+        if self.sig:
+            self.sig.emit()
 
 class ObjectTreeItem(QTreeWidgetItem):
 
@@ -50,8 +67,12 @@ class ObjectTreeItem(QTreeWidgetItem):
 
         self.properties['Name'] = name
         self.properties['Alpha'] = ais.Transparency()
+        self.properties['Visible'] = True
         self.properties['Color'] = get_occ_color(ais) if ais and ais.HasColor() else get_occ_color(DEFAULT_FACE_COLOR)
         self.properties.sigTreeStateChanged.connect(self.propertiesChanged)
+
+        # trigger propertiesChanged to set initial values
+        self.propertiesChanged(self.properties,[[self.properties['Visible']]])
 
     def propertiesChanged(self, properties, changed):
 
@@ -60,10 +81,13 @@ class ObjectTreeItem(QTreeWidgetItem):
         self.setData(0,0,self.properties['Name'])
         self.ais.SetTransparency(self.properties['Alpha'])
 
-        if changed_prop.name() == 'Color':
-            set_color(self.ais, to_occ_color(self.properties['Color']))
-
-        self.ais.Redisplay()
+        try:
+            if changed_prop.name() == 'Color':
+                set_color(self.ais, to_occ_color(self.properties['Color']))
+        
+            self.ais.Redisplay()
+        except AttributeError:
+            pass
 
         if self.properties['Visible']:
             self.setCheckState(0,Qt.Checked)
@@ -75,16 +99,16 @@ class ObjectTreeItem(QTreeWidgetItem):
 
 class CQRootItem(TopTreeItem):
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self,sig):
 
-        super(CQRootItem,self).__init__(['Models'],*args,**kwargs)
+        super(CQRootItem,self).__init__(name=['Models'], sig=sig)
 
 
 class HelpersRootItem(TopTreeItem):
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self,sig):
 
-        super(HelpersRootItem,self).__init__(['Helpers'],*args,**kwargs)
+        super(HelpersRootItem,self).__init__(name=['Helpers'],sig=sig)
 
 
 class ObjectTree(QWidget,ComponentMixin):
@@ -123,8 +147,8 @@ class ObjectTree(QWidget,ComponentMixin):
         #handle visibility changes form tree
         tree.itemChanged.connect(self.handleChecked)
 
-        self.CQ = CQRootItem()
-        self.Helpers = HelpersRootItem()
+        self.CQ = CQRootItem(sig=self.sigObjectPropertiesChanged)
+        self.Helpers = HelpersRootItem(sig=self.sigObjectPropertiesChanged)
 
         root = tree.invisibleRootItem()
         root.addChild(self.CQ)
@@ -390,6 +414,16 @@ class ObjectTree(QWidget,ComponentMixin):
                 item.properties['Visible'] = True
             else:
                 item.properties['Visible'] = False
+        else:
+            if item.checkState(0):
+                item.properties['Visible'] = True
+            else:
+                item.properties['Visible'] = False
+            # set all children to the same state
+            for i in range(item.childCount()):
+                child = item.child(i)
+                child.properties['Visible'] = item.properties['Visible']
+                
 
 
 

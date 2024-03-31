@@ -1,13 +1,17 @@
 import sys
 import argparse
+import os
+
+os.environ["QT_ENABLE_HIGHDPI_SCALING"]   = "0"
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+os.environ["QT_SCALE_FACTOR"]             = "1"
 
 from PyQt5.QtWidgets import QApplication
 
 NAME = 'CQ-editor'
 
-#need to initialize QApp here, otherewise svg icons do not work on windows
-app = QApplication(sys.argv,
-                   applicationName=NAME)
+app = QApplication(sys.argv, applicationName=NAME)
+
 import qdarktheme
 qdarktheme.setup_theme()
 

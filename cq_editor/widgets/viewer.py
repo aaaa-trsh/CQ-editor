@@ -149,7 +149,7 @@ class OCCViewer(QWidget,ComponentMixin):
                                   parent,
                                   shortcut='shift+F9',
                                   triggered=self.wireframe_view),
-                        QAction(
+                          QAction(
                                 'Shaded',
                                 parent,
                                 shortcut='shift+F10',
@@ -213,10 +213,11 @@ class OCCViewer(QWidget,ComponentMixin):
     def update_item(self,item,col):
 
         ctx = self._get_context()
-        if item.checkState(0):
-            ctx.Display(item.ais,True)
-        else:
-            ctx.Erase(item.ais,True)
+        if hasattr(item,'ais'):
+            if item.checkState(0):
+                ctx.Display(item.ais,True)
+            else:
+                ctx.Erase(item.ais,True)
 
     @pyqtSlot(list)
     def remove_items(self,ais_items):
