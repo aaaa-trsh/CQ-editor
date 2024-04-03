@@ -10,7 +10,8 @@ from OCP.Aspect import Aspect_DisplayConnection, Aspect_TypeOfTriedronPosition
 from OCP.OpenGl import OpenGl_GraphicDriver
 from OCP.V3d import V3d_Viewer
 from OCP.AIS import AIS_InteractiveContext, AIS_DisplayMode
-from OCP.Quantity import Quantity_Color
+from OCP.Quantity import Quantity_Color, Quantity_NameOfColor
+
 
 
 ZOOM_STEP = 0.9
@@ -63,6 +64,8 @@ class OCCTWidget(QWidget):
         
         ctx.SetDisplayMode(AIS_DisplayMode.AIS_Shaded, True)
         ctx.DefaultDrawer().SetFaceBoundaryDraw(True)
+        # ctx.DefaultDrawer().FaceBoundaryAspect().SetColor(Quantity_Color(Quantity_NameOfColor.Quantity_NOC_WHITE))
+
         
     def wheelEvent(self, event):
         

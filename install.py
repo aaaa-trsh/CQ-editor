@@ -5,16 +5,17 @@ import sys
 import subprocess
 
 pkgs = [
-    # "PyQt5",
-    # "pyqtgraph",
-    # "spyder",
-    # "path",
-    # "logbook",
-    # "requests",
-    # "qtconsole",
-    # "QtAwesome"
+    "PyQt5",
+    "pyqtgraph",
+    "spyder",
+    "path",
+    "logbook",
+    "requests",
+    "qtconsole",
+    "QtAwesome"
     "pyqtdarktheme"
-
+    "pytest"
+    "pytest-qt"
 ]
 
 def install(pkg):

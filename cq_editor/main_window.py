@@ -229,15 +229,15 @@ class MainWindow(QMainWindow,MainMixin):
             connect(self.components['viewer'].update_item)
         self.components['object_tree'].sigObjectsRemoved\
             .connect(self.components['viewer'].remove_items)
-        self.components['object_tree'].sigCQObjectSelected\
-            .connect(self.components['cq_object_inspector'].setObject)
+        # self.components['object_tree'].sigCQObjectSelected\
+        #     .connect(self.components['cq_object_inspector'].setObject)
         self.components['object_tree'].sigObjectPropertiesChanged\
             .connect(self.components['viewer'].redraw)
-        self.components['object_tree'].sigAISObjectsSelected\
-            .connect(self.components['viewer'].set_selected)
+        # self.components['object_tree'].sigAISObjectsSelected\
+        #     .connect(self.components['viewer'].set_selected)
 
-        self.components['viewer'].sigObjectSelected\
-            .connect(self.components['object_tree'].handleGraphicalSelection)
+        # self.components['viewer'].sigObjectSelected\
+        #     .connect(self.components['object_tree'].handleGraphicalSelection)
 
         self.components['traceback_viewer'].sigHighlightLine\
             .connect(self.components['editor'].go_to_line)
@@ -246,10 +246,10 @@ class MainWindow(QMainWindow,MainMixin):
             .connect(self.components['viewer'].display_many)
         self.components['cq_object_inspector'].sigRemoveObjects\
             .connect(self.components['viewer'].remove_items)
-        self.components['cq_object_inspector'].sigShowPlane\
-            .connect(self.components['viewer'].toggle_grid)
-        self.components['cq_object_inspector'].sigShowPlane[bool,float]\
-            .connect(self.components['viewer'].toggle_grid)
+        # self.components['cq_object_inspector'].sigShowPlane\
+        #     .connect(self.components['viewer'].toggle_grid)
+        # self.components['cq_object_inspector'].sigShowPlane[bool,float]\
+        #     .connect(self.components['viewer'].toggle_grid)
         self.components['cq_object_inspector'].sigChangePlane\
             .connect(self.components['viewer'].set_grid_orientation)
 

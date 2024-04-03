@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QAction, QMenu, QWidget, QAbstractItemView
+from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QAction, QMenu, QWidget, QAbstractItemView, QHeaderView
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
+from PyQt5.QtGui import QColor, QFont
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
@@ -13,13 +14,13 @@ from ..cq_utils import make_AIS, export, to_occ_color, is_obj_empty, get_occ_col
 from .viewer import DEFAULT_FACE_COLOR
 from ..utils import splitter, layout, get_save_filename
 
-class TopTreeItem(QTreeWidgetItem):
+class GroupTreeItem(QTreeWidgetItem):
     props = [{'name': 'Visible', 'type': 'bool','value': True}]
     def __init__(self,name,sig,*args,**kwargs):
 
-        super(TopTreeItem,self).__init__(name, *args,**kwargs)
+        super(GroupTreeItem,self).__init__(name, *args,**kwargs)
         self.setFlags( self.flags() | Qt.ItemIsUserCheckable)
-        self.setCheckState(0,Qt.Checked)
+        self.setCheckState(1,Qt.Checked)
 
         self.sig = sig
 
@@ -29,9 +30,9 @@ class TopTreeItem(QTreeWidgetItem):
 
     def propertiesChanged(self, properties, changed):        
         if self.properties['Visible']:
-            self.setCheckState(0,Qt.Checked)
+            self.setCheckState(1,Qt.Checked)
         else:
-            self.setCheckState(0,Qt.Unchecked)
+            self.setCheckState(1,Qt.Unchecked)
 
         if self.sig:
             self.sig.emit()
@@ -55,7 +56,7 @@ class ObjectTreeItem(QTreeWidgetItem):
 
         super(ObjectTreeItem,self).__init__([name],**kwargs)
         self.setFlags( self.flags() | Qt.ItemIsUserCheckable)
-        self.setCheckState(0,Qt.Checked)
+        self.setCheckState(1,Qt.Checked)
 
         self.ais = ais
         self.shape = shape
@@ -90,21 +91,21 @@ class ObjectTreeItem(QTreeWidgetItem):
             pass
 
         if self.properties['Visible']:
-            self.setCheckState(0,Qt.Checked)
+            self.setCheckState(1,Qt.Checked)
         else:
-            self.setCheckState(0,Qt.Unchecked)
+            self.setCheckState(1,Qt.Unchecked)
 
         if self.sig:
             self.sig.emit()
 
-class CQRootItem(TopTreeItem):
+class CQRootItem(GroupTreeItem):
 
     def __init__(self,sig):
 
         super(CQRootItem,self).__init__(name=['Models'], sig=sig)
 
 
-class HelpersRootItem(TopTreeItem):
+class HelpersRootItem(GroupTreeItem):
 
     def __init__(self,sig):
 
@@ -132,18 +133,18 @@ class ObjectTree(QWidget,ComponentMixin):
 
         super(ObjectTree,self).__init__(parent)
 
-        self.tree = tree = QTreeWidget(self,
-                                       selectionMode=QAbstractItemView.ExtendedSelection)
+        self.tree = tree = QTreeWidget(self, selectionMode=QAbstractItemView.ExtendedSelection)
         self.properties_editor = ParameterTree(self)
 
         tree.setHeaderHidden(True)
-        tree.setItemsExpandable(False)
+        tree.setColumnCount(2)
+
+        # tree.setItemsExpandable(False)
         tree.setRootIsDecorated(False)
         tree.setContextMenuPolicy(Qt.ActionsContextMenu)
 
         #forward itemChanged singal
-        tree.itemChanged.connect(\
-            lambda item,col: self.sigItemChanged.emit(item,col))
+        tree.itemChanged.connect(lambda item,col: self.sigItemChanged.emit(item,col))
         #handle visibility changes form tree
         tree.itemChanged.connect(self.handleChecked)
 
@@ -155,6 +156,10 @@ class ObjectTree(QWidget,ComponentMixin):
         root.addChild(self.Helpers)
         
         tree.expandToDepth(1)
+
+        tree.header().setStretchLastSection(False)
+        tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        tree.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
 
         self._export_STL_action = \
             QAction('Export as STL',
@@ -183,6 +188,7 @@ class ObjectTree(QWidget,ComponentMixin):
 
         self.prepareMenu()
 
+        tree.itemClicked.connect(self.handleClick)
         tree.itemSelectionChanged.connect(self.handleSelection)
         tree.customContextMenuRequested.connect(self.showMenu)
 
@@ -276,7 +282,19 @@ class ObjectTree(QWidget,ComponentMixin):
         #remove empty objects
         objects_f = {k:v for k,v in objects.items() if not is_obj_empty(v.shape)}
 
-        for name,obj in objects_f.items():
+        for path,obj in objects_f.items():
+            parts = [p for p in path.split('/') if len(p) > 0]
+            name = parts[-1]
+            parts = [f"{p}/" for p in parts[:-1]]
+            cur_level = root
+            for part in parts:
+                children = [cur_level.child(i) for i in range(cur_level.childCount())]
+                if part not in [ch.text(0) for ch in children]:
+                    group = GroupTreeItem([part],sig=self.sigObjectPropertiesChanged)
+                    cur_level.addChild(group)
+
+                cur_level = [cur_level.child(i) for i in range(cur_level.childCount()) if cur_level.child(i).text(0) == part][0]
+
             ais,shape_display = make_AIS(obj.shape,obj.options)
             
             child = ObjectTreeItem(name,
@@ -291,7 +309,7 @@ class ObjectTree(QWidget,ComponentMixin):
             if child.properties['Visible']:
                 ais_list.append(ais)
             
-            root.addChild(child)
+            cur_level.addChild(child)
 
         if request_fit_view:
             self.sigObjectsAdded[list,bool].emit(ais_list,True)
@@ -315,13 +333,33 @@ class ObjectTree(QWidget,ComponentMixin):
 
     @pyqtSlot(list)
     @pyqtSlot()
-    def removeObjects(self,objects=None):
+    def removeObjects(self,objects=None): #please !work!!!
+        # if objects:
+        #     removed_items_ais = [self.CQ.takeChild(i).ais for i in objects if hasattr(self.CQ.takeChild(i), "ais")]
+        # else:
+        #     removed_items_ais = [ch.ais for ch in self.CQ.takeChildren() if hasattr(ch, "ais")]
+
+        # remove selected objects recursively
+        removed_items_ais = []
+        def remove_children(item):
+            for i in range(item.childCount()):
+                child = item.child(i)
+                if hasattr(child, "ais"):
+                    removed_items_ais.append(child.ais)
+                remove_children(child)
+            
+            for i in range(item.childCount()):
+                item.takeChild(0)
 
         if objects:
-            removed_items_ais = [self.CQ.takeChild(i).ais for i in objects]
+            for i in objects:
+                item = self.CQ.child(i)
+                if hasattr(item, "ais"):
+                    removed_items_ais.append(item.ais)
+                remove_children(item)
         else:
-            removed_items_ais = [ch.ais for ch in self.CQ.takeChildren()]
-
+            remove_children(self.CQ)
+            
         self.sigObjectsRemoved.emit(removed_items_ais)
 
     @pyqtSlot(bool)
@@ -329,12 +367,12 @@ class ObjectTree(QWidget,ComponentMixin):
 
         if action:
             self._stash = self.CQ.takeChildren()
-            removed_items_ais = [ch.ais for ch in self._stash]
+            removed_items_ais = [ch.ais for ch in self._stash if hasattr(ch, "ais")]
             self.sigObjectsRemoved.emit(removed_items_ais)
         else:
             self.removeObjects()
             self.CQ.addChildren(self._stash)
-            ais_list = [el.ais for el in self._stash]
+            ais_list = [el.ais for el in self._stash if hasattr(el, "ais")]
             self.sigObjectsAdded.emit(ais_list)
 
     @pyqtSlot()
@@ -352,15 +390,22 @@ class ObjectTree(QWidget,ComponentMixin):
         # if CQ models is selected get all children
         if [item for item in items if item is self.CQ]:
             CQ = self.CQ
-            shapes = [CQ.child(i).shape for i in range(CQ.childCount())]
+            shapes = [CQ.child(i).shape for i in range(CQ.childCount()) if hasattr(CQ.child(i), "shape")]
         # otherwise collect all selected children of CQ
         else:
-            shapes = [item.shape for item in items if item.parent() is self.CQ]
+            shapes = [item.shape for item in items if hasattr(item, "shape")]
 
         fname = get_save_filename(export_type)
         if fname != '':
              export(shapes,export_type,fname,precision)
 
+    def handleClick(self,item,col):
+        if col == 0:
+            if item.isExpanded():
+                self.tree.collapseItem(item)
+            else:
+                self.tree.expandItem(item)
+            
     @pyqtSlot()
     def handleSelection(self):
 
@@ -371,22 +416,24 @@ class ObjectTree(QWidget,ComponentMixin):
             return
 
         # emit list of all selected ais objects (might be empty)
-        ais_objects = [item.ais for item in items if item.parent() is self.CQ]
+        ais_objects = [item.ais for item in items if item.parent() is self.CQ and hasattr(item, "ais")]
         self.sigAISObjectsSelected.emit(ais_objects)
 
         # handle context menu and emit last selected CQ  object (if present)
         item = items[-1]
-        if item.parent() is self.CQ:
+        if hasattr(item,'shape'):
             self._export_STL_action.setEnabled(True)
             self._export_STEP_action.setEnabled(True)
             self._clear_current_action.setEnabled(True)
             self.sigCQObjectSelected.emit(item.shape)
-            self.properties_editor.setParameters(item.properties,
-                                                 showTop=False)
+            self.properties_editor.setParameters(item.properties, showTop=False)
             self.properties_editor.setEnabled(True)
-        elif item is self.CQ and item.childCount()>0:
+        elif item.childCount() > 0:
             self._export_STL_action.setEnabled(True)
             self._export_STEP_action.setEnabled(True)
+
+            self.properties_editor.setEnabled(False)
+            self.properties_editor.clear()
         else:
             self._export_STL_action.setEnabled(False)
             self._export_STEP_action.setEnabled(False)
@@ -396,34 +443,45 @@ class ObjectTree(QWidget,ComponentMixin):
 
     @pyqtSlot(list)
     def handleGraphicalSelection(self,shapes):
+        pass
+        # self.tree.clearSelection()
 
-        self.tree.clearSelection()
+        # CQ = self.CQ
+        # for i in range(CQ.childCount()):
+        #     item = CQ.child(i)
+        #     for shape in shapes:
+        #         if not hasattr(item, "shape"):
+        #             continue
 
-        CQ = self.CQ
-        for i in range(CQ.childCount()):
-            item = CQ.child(i)
-            for shape in shapes:
-                if item.ais.Shape().IsEqual(shape):
-                    item.setSelected(True)
+        #         if item.ais.Shape().IsEqual(shape):
+        #             item.setSelected(True)
 
     @pyqtSlot(QTreeWidgetItem,int)
     def handleChecked(self,item,col):
 
         if type(item) is ObjectTreeItem:
-            if item.checkState(0):
+            if item.checkState(1):
                 item.properties['Visible'] = True
             else:
                 item.properties['Visible'] = False
         else:
-            if item.checkState(0):
+            # for i in range(item.childCount()):
+            #     child = item.child(i)
+            #     child.properties['Visible'] = item.properties['Visible']
+            if item.checkState(1):
                 item.properties['Visible'] = True
             else:
                 item.properties['Visible'] = False
+
+            changed = []
+            def set_children_visible(item):
+                for i in range(item.childCount()):
+                    child = item.child(i)
+                    child.properties['Visible'] = item.properties['Visible']
+                    changed.append(child)
+                    set_children_visible(child)
+
             # set all children to the same state
-            for i in range(item.childCount()):
-                child = item.child(i)
-                child.properties['Visible'] = item.properties['Visible']
-                
-
-
-
+            set_children_visible(item)
+            # for child in changed:
+            #     child.propertiesChanged(child.properties,[[child.properties['Visible']]])

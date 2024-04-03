@@ -63,6 +63,7 @@ class OCCViewer(QWidget,ComponentMixin):
 
         self.setup_default_drawer()
         self.updatePreferences()
+        self.show_grid()
 
     def setup_default_drawer(self):
 
@@ -214,7 +215,7 @@ class OCCViewer(QWidget,ComponentMixin):
 
         ctx = self._get_context()
         if hasattr(item,'ais'):
-            if item.checkState(0):
+            if item.checkState(1):
                 ctx.Display(item.ais,True)
             else:
                 ctx.Erase(item.ais,True)
@@ -287,9 +288,9 @@ class OCCViewer(QWidget,ComponentMixin):
         c.SetDisplayMode(AIS_WireFrame, True)
 
     def show_grid(self,
-                  step=1.,
-                  size=10.+1e-6,
-                  color1=(.7,.7,.7),
+                  step=20.,
+                  size=100.+1e-6,
+                  color1=(.05,.05,.05),
                   color2=(0,0,0)):
 
         viewer = self._get_viewer()
@@ -306,8 +307,8 @@ class OCCViewer(QWidget,ComponentMixin):
         viewer = self._get_viewer()
         viewer.DeactivateGrid()
 
-    @pyqtSlot(bool,float)
-    @pyqtSlot(bool)
+    # @pyqtSlot(bool,float)
+    # @pyqtSlot(bool)
     def toggle_grid(self,
                     value : bool,
                     dim : float = 10.):
@@ -360,14 +361,14 @@ class OCCViewer(QWidget,ComponentMixin):
 
     @pyqtSlot(list)
     def set_selected(self,ais):
+        pass
+        # ctx = self._get_context()
+        # ctx.ClearSelected(False)
 
-        ctx = self._get_context()
-        ctx.ClearSelected(False)
+        # for obj in ais:
+        #     ctx.AddOrRemoveSelected(obj,False)
 
-        for obj in ais:
-            ctx.AddOrRemoveSelected(obj,False)
-
-        self.redraw()
+        # self.redraw()
 
 
 if __name__ == "__main__":
