@@ -12,10 +12,10 @@ pkgs = [
     "logbook",
     "requests",
     "qtconsole",
-    "QtAwesome"
-    "pyqtdarktheme"
-    "pytest"
-    "pytest-qt"
+    "QtAwesome",
+    "pyqtdarktheme",
+    "pytest",
+    "pytest-qt",
 ]
 
 def install(pkg):
