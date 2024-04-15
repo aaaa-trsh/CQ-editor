@@ -76,8 +76,8 @@ def icon(name, size=48):
         textWidth = fm.width(emoji)
         textHeight = fm.height()
 
-        x = (size - textWidth) / 2 + int(offset[0] * size)
-        y = (size - textHeight) / 2 + fm.ascent() + int(offset[1] * size)
+        x = int((size - textWidth) / 2 + int(offset[0] * size))
+        y = int((size - textHeight) / 2 + fm.ascent() + int(offset[1] * size))
         
         # Draw the emoji onto the pixmap
         painter.drawText(x, y, emoji)
