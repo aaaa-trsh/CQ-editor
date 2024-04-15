@@ -47,6 +47,7 @@ class ObjectTreeItem(QTreeWidgetItem):
     def __init__(self,
                  name,
                  ais=None,
+                 label_ais=None,
                  shape=None,
                  shape_display=None,
                  sig=None,
@@ -59,6 +60,7 @@ class ObjectTreeItem(QTreeWidgetItem):
         self.setCheckState(1,Qt.Checked)
 
         self.ais = ais
+        self.label_ais = label_ais
         self.shape = shape
         self.shape_display = shape_display
         self.sig = sig
@@ -295,12 +297,13 @@ class ObjectTree(QWidget,ComponentMixin):
 
                 cur_level = [cur_level.child(i) for i in range(cur_level.childCount()) if cur_level.child(i).text(0) == part][0]
 
-            ais,shape_display = make_AIS(obj.shape,obj.options)
+            ais,shape_display,label_ais = make_AIS(obj.shape,obj.options)
             
             child = ObjectTreeItem(name,
                                    shape=obj.shape,
                                    shape_display=shape_display,
                                    ais=ais,
+                                   label_ais=label_ais,
                                    sig=self.sigObjectPropertiesChanged)
             
             if preserve_props and name in current_props:
@@ -308,6 +311,7 @@ class ObjectTree(QWidget,ComponentMixin):
             
             if child.properties['Visible']:
                 ais_list.append(ais)
+                ais_list.append(label_ais)
             
             cur_level.addChild(child)
 
@@ -321,7 +325,7 @@ class ObjectTree(QWidget,ComponentMixin):
 
         root = self.CQ
 
-        ais,shape_display = make_AIS(obj, options)
+        ais,shape_display,label = make_AIS(obj, options)
 
         root.addChild(ObjectTreeItem(name,
                                      shape=obj,
@@ -346,6 +350,8 @@ class ObjectTree(QWidget,ComponentMixin):
                 child = item.child(i)
                 if hasattr(child, "ais"):
                     removed_items_ais.append(child.ais)
+                if hasattr(child, "label_ais"):
+                    removed_items_ais.append(child.label_ais)
                 remove_children(child)
             
             for i in range(item.childCount()):
@@ -356,6 +362,8 @@ class ObjectTree(QWidget,ComponentMixin):
                 item = self.CQ.child(i)
                 if hasattr(item, "ais"):
                     removed_items_ais.append(item.ais)
+                if hasattr(item, "label_ais"):
+                    removed_items_ais.append(item.label_ais)
                 remove_children(item)
         else:
             remove_children(self.CQ)

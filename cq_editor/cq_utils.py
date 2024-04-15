@@ -7,11 +7,12 @@ from types import SimpleNamespace
 
 from OCP.XCAFPrs import XCAFPrs_AISObject
 from OCP.TopoDS import TopoDS_Shape
-from OCP.AIS import AIS_InteractiveObject, AIS_Shape
+from OCP.AIS import AIS_InteractiveObject, AIS_Shape, AIS_TextLabel
+from OCP.TCollection import TCollection_ExtendedString
 from OCP.Quantity import \
     Quantity_TOC_RGB as TOC_RGB, Quantity_Color, Quantity_NOC_GOLD as GOLD
 from OCP.Graphic3d import Graphic3d_NOM_JADE, Graphic3d_MaterialAspect
-
+from OCP.Prs3d import Prs3d_LineAspect 
 from PyQt5.QtGui import QColor
 
 DEFAULT_FACE_COLOR = Quantity_Color(GOLD)
@@ -67,6 +68,7 @@ def make_AIS(obj : Union[cq.Workplane, List[cq.Workplane], cq.Shape, List[cq.Sha
     else:
         shape = to_compound(obj)
         ais = AIS_Shape(shape.wrapped)
+    ais.Attributes().SetupOwnDefaults()
 
     set_material(ais, DEFAULT_MATERIAL)
     set_color(ais, DEFAULT_FACE_COLOR)
@@ -80,7 +82,18 @@ def make_AIS(obj : Union[cq.Workplane, List[cq.Workplane], cq.Shape, List[cq.Sha
         set_color(ais, to_occ_color((r,g,b)))
         set_transparency(ais, a)
 
-    return ais,shape
+    label = None
+    if 'label' in options:
+        label_text = options['label']
+        string = TCollection_ExtendedString(label_text)
+        label = AIS_TextLabel()
+        label.SetText(string)
+        label.SetPosition(obj.Center().toPnt())
+        if 'label_color' in options:
+            label.SetColor(to_occ_color(options['label_color']))
+
+
+    return ais,shape,label
 
 def export(obj : Union[cq.Workplane, List[cq.Workplane]], type : str,
            file, precision=1e-1):
@@ -123,10 +136,17 @@ def get_occ_color(obj : Union[AIS_InteractiveObject, Quantity_Color]) -> QColor:
     return QColor.fromRgbF(color.Red(), color.Green(), color.Blue())
 
 def set_color(ais : AIS_Shape, color : Quantity_Color) -> AIS_Shape:
-
     drawer = ais.Attributes()
+    drawer.SetupOwnDefaults()
     drawer.SetupOwnShadingAspect()
     drawer.ShadingAspect().SetColor(color)
+    drawer.WireAspect().SetColor(color)
+    return ais
+
+def set_stroke(ais : AIS_Shape, color : Quantity_Color) -> AIS_Shape:
+
+    drawer = ais.Attributes()
+    drawer.WireAspect().SetColor(color)
 
     return ais
 

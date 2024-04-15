@@ -220,6 +220,13 @@ class OCCViewer(QWidget,ComponentMixin):
             else:
                 ctx.Erase(item.ais,True)
 
+        if hasattr(item,'label_ais'):
+            if item.checkState(1):
+                ctx.Display(item.label_ais,True)
+            else:
+                ctx.Erase(item.label_ais,True)
+
+
     @pyqtSlot(list)
     def remove_items(self,ais_items):
 
