@@ -1,0 +1,12 @@
+PyQt5
+pyqtgraph
+spyder
+path
+logbook
+requests
+qtconsole
+QtAwesome
+pyqtdarktheme
+pytest
+pytest
+boto3
